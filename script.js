@@ -1,54 +1,26 @@
-let currentRegion = "";
-let priceA = 0;
-let priceB = 0;
-let score = 0;
+const SUPABASE_URL = 'https://gwoirahsdyodlcidrpzm.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd3b2lyYWhzZHlvZGxjaWRycHptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIyMDEyNjYsImV4cCI6MjA2Nzc3NzI2Nn0.4FMNMYTXSjZXV8y_vS_2SLjEz3gFn2G81i-Zjv39jyY';
 
-function startGame(region) {
-  currentRegion = region;
-  document.getElementById("region-name").innerText = "Region: " + region;
-  document.getElementById("start-screen").style.display = "none";
-  document.getElementById("game-screen").style.display = "block";
-  score = 0;
-  document.getElementById("score").innerText = "Score: 0";
-  newRound();
+async function saveScoreToSupabase(name, score) {
+  const response = await fetch(`${SUPABASE_URL}/rest/v1/leaderboard`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`
+    },
+    body: JSON.stringify({ name, score })
+  });
 }
 
-function getRandomPrice(region) {
-  if (region === "Australia") {
-    return Math.floor(Math.random() * 2000000) + 200000; // $200k - $2.2m
-  } else {
-    return Math.floor(Math.random() * 1000000) + 100000; // £100k - £1.1m
-  }
-}
-
-function newRound() {
-  priceA = getRandomPrice(currentRegion);
-  priceB = getRandomPrice(currentRegion);
-  document.getElementById("price-a").innerText = formatPrice(priceA);
-  document.querySelector(".property:nth-child(3) p").innerText = "?";
-  document.getElementById("result").innerText = "";
-}
-
-function formatPrice(price) {
-  let symbol = currentRegion === "Australia" ? "$" : "£";
-  return symbol + price.toLocaleString();
-}
-
-function guess(choice) {
-  let correct = (priceB > priceA && choice === "higher") || 
-                (priceB < priceA && choice === "lower");
-  document.querySelector(".property:nth-child(3) p").innerText = formatPrice(priceB);
-  
-  if (priceA === priceB) {
-    document.getElementById("result").innerText = "It's a draw! No points.";
-  } else if (correct) {
-    score++;
-    document.getElementById("result").innerText = "Correct!";
-  } else {
-    document.getElementById("result").innerText = "Wrong! Game over.";
-    score = 0;
-  }
-
-  document.getElementById("score").innerText = "Score: " + score;
-  setTimeout(newRound, 1500);
+async function fetchLeaderboardFromSupabase() {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/leaderboard?select=*`, {
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`
+    }
+  });
+  const data = await res.json();
+  data.sort((a, b) => b.score - a.score); // highest first
+  return data.slice(0, 10);
 }
