@@ -1,41 +1,110 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Property Higher or Lower</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    /* Quick sidebar layout */
+    body {
+      display: flex;
+      min-height: 100vh;
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: white;
+    }
+    #start-screen {
+      flex: 2;
+      padding: 40px;
+      text-align: center;
+      border-right: 2px solid #222;
+    }
+    #leaderboard {
+      flex: 1;
+      padding: 40px;
+      overflow-y: auto;
+      border-left: 2px solid #222;
+      background: #222;
+    }
+    button {
+      padding: 15px 30px;
+      margin: 10px;
+      font-size: 18px;
+      border: none;
+      border-radius: 8px;
+      background: #00aaff;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #008fcc;
+    }
+    ul {
+      list-style: none;
+      padding-left: 0;
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+    ul li {
+      padding: 8px 0;
+      border-bottom: 1px solid #444;
+    }
+  </style>
 </head>
 <body>
   <div id="start-screen">
     <h1>Property Higher or Lower</h1>
     <p>Select a region to start:</p>
-    <button onclick="startGame('Australia')">Australia</button>
-    <button onclick="startGame('UK')">UK</button>
+    <a href="australia.html"><button>Australia</button></a>
+    <a href="uk.html"><button>UK</button></a>
   </div>
 
-  <div id="game-screen" style="display:none;">
-    <h2 id="region-name"></h2>
-    <div class="property">
-      <h3>Property A</h3>
-      <p id="price-a">$0</p>
-    </div>
-    <div class="vs">VS</div>
-    <div class="property">
-      <h3>Property B</h3>
-      <p>?</p>
-    </div>
-    <button onclick="guess('higher')">Higher</button>
-    <button onclick="guess('lower')">Lower</button>
-    <p id="result"></p>
-    <p id="score">Score: 0</p>
+  <div id="leaderboard">
+    <h2>🏆 Global Leaderboard</h2>
+    <ul id="leaderboard-list">
+      <li>Loading...</li>
+    </ul>
   </div>
 
-  <div id="leaderboard" style="display:none;">
-    <h2>🏆 Leaderboard (Global)</h2>
-    <ul id="leaderboard-list"></ul>
-    <button onclick="restartGame()">Play Again</button>
-  </div>
+  <script>
+    const SUPABASE_URL = 'https://gwoirahsdyodlcidrpzm.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd3b2lyYWhzZHlvZGxjaWRycHptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIyMDEyNjYsImV4cCI6MjA2Nzc3NzI2Nn0.4FMNMYTXSjZXV8y_vS_2SLjEz3gFn2G81i-Zjv39jyY';
 
-  <script src="script.js"></script>
+    async function fetchLeaderboardFromSupabase() {
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/leaderboard?select=*`, {
+          headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`
+          }
+        });
+        if (!res.ok) throw new Error('Failed to fetch leaderboard');
+        const data = await res.json();
+        data.sort((a, b) => b.score - a.score);
+        return data.slice(0, 10);
+      } catch (error) {
+        console.error(error);
+        return [];
+      }
+    }
+
+    async function loadLeaderboard() {
+      const list = document.getElementById('leaderboard-list');
+      list.innerHTML = '';
+      const leaderboard = await fetchLeaderboardFromSupabase();
+      if (leaderboard.length === 0) {
+        list.innerHTML = '<li>No scores yet.</li>';
+        return;
+      }
+      leaderboard.forEach((entry, i) => {
+        const li = document.createElement('li');
+        li.textContent = `${i + 1}. ${entry.name} - ${entry.score}`;
+        list.appendChild(li);
+      });
+    }
+
+    loadLeaderboard();
+  </script>
 </body>
 </html>
