@@ -2,36 +2,302 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Property Higher or Lower - Australia</title>
+  <title>Property Higher or Lower – Australia</title>
   <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    #game-container {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+      padding: 20px;
+      max-width: 700px;
+      width: 100%;
+      text-align: center;
+    }
+    #property-options {
+      display: flex;
+      justify-content: space-around;
+      margin: 20px 0;
+    }
+    #property-1, #property-2 {
+      width: 45%;
+    }
+    #property-1 img, #property-2 img {
+      width: 100%;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+    #price-1, #price-2 {
+      font-size: 1.2em;
+      margin-top: 8px;
+      font-weight: bold;
+    }
+    #buttons button {
+      font-size: 1.2em;
+      padding: 12px 25px;
+      margin: 10px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background-color: #0077cc;
+      color: white;
+      transition: background-color 0.3s ease;
+    }
+    #buttons button:hover {
+      background-color: #005fa3;
+    }
+    #score {
+      font-size: 1.4em;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+    #result {
+      margin-top: 12px;
+      font-size: 1.3em;
+      min-height: 30px;
+      font-weight: 600;
+    }
+    #leaderboard {
+      margin-top: 30px;
+      max-width: 400px;
+      width: 100%;
+      background: #222;
+      color: white;
+      padding: 15px 20px;
+      border-radius: 8px;
+      text-align: left;
+    }
+    #leaderboard h2 {
+      margin-top: 0;
+      text-align: center;
+    }
+    #leaderboard ul {
+      list-style: none;
+      padding-left: 0;
+      max-height: 250px;
+      overflow-y: auto;
+      margin: 0;
+    }
+    #leaderboard li {
+      padding: 6px 0;
+      border-bottom: 1px solid #444;
+      font-size: 1.1em;
+    }
+    a.back-home {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 10px 20px;
+      background: #555;
+      color: white;
+      text-decoration: none;
+      border-radius: 6px;
+      transition: background-color 0.3s ease;
+    }
+    a.back-home:hover {
+      background-color: #333;
+    }
+  </style>
 </head>
 <body>
-  <div id="game-screen">
-    <h2>Region: Australia</h2>
-    <div class="property">
-      <h3>Property A</h3>
-      <p id="price-a">$0</p>
+
+  <div id="game-container">
+    <h1>Property Higher or Lower – Australia</h1>
+    <p>Guess which property has the higher price!</p>
+    
+    <div id="property-options">
+      <div id="property-1">
+        <img src="" alt="Property 1" id="img-1" />
+        <p id="price-1">$0</p>
+      </div>
+      <div id="property-2">
+        <img src="" alt="Property 2" id="img-2" />
+        <p id="price-2">?</p>
+      </div>
     </div>
-    <div class="vs">VS</div>
-    <div class="property">
-      <h3>Property B</h3>
-      <p>?</p>
+    
+    <div id="buttons">
+      <button id="higher-btn">Higher</button>
+      <button id="lower-btn">Lower</button>
     </div>
-    <button onclick="guess('higher')">Higher</button>
-    <button onclick="guess('lower')">Lower</button>
-    <p id="result"></p>
+    
     <p id="score">Score: 0</p>
+    <p id="result"></p>
+    
+    <a href="index.html" class="back-home">Back to Home</a>
   </div>
 
-  <div id="leaderboard" style="display:none;">
-    <h2>🏆 Leaderboard (Global)</h2>
-    <ul id="leaderboard-list"></ul>
-    <button onclick="restartGame()">Play Again</button>
+  <div id="leaderboard">
+    <h2>🏆 Global Leaderboard</h2>
+    <ul id="leaderboard-list">
+      <li>Loading leaderboard...</li>
+    </ul>
   </div>
 
-  <script src="script.js"></script>
   <script>
-    startGame('Australia');
+    // Your Supabase details here:
+    const SUPABASE_URL = 'https://gwoirahsdyodlcidrpzm.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd3b2lyYWhzZHlvZGxjaWRycHptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTIyMDEyNjYsImV4cCI6MjA2Nzc3NzI2Nn0.4FMNMYTXSjZXV8y_vS_2SLjEz3gFn2G81i-Zjv39jyY';
+
+    // Australian properties sample data
+    const properties = [
+      {
+        img: 'https://cdn.domain.com.au/domain/1303348_2799646_3-80d2000-1.jpg',
+        price: 1250000,
+        address: '10 Example St, Sydney NSW'
+      },
+      {
+        img: 'https://cdn.domain.com.au/domain/1898394_4920096_5-cc23f500-0.jpg',
+        price: 980000,
+        address: '25 Beach Rd, Melbourne VIC'
+      },
+      {
+        img: 'https://cdn.domain.com.au/domain/1987653_4189035_3-592d4a00-1.jpg',
+        price: 1100000,
+        address: '12 Palm Ave, Brisbane QLD'
+      },
+      {
+        img: 'https://cdn.domain.com.au/domain/1255090_4135899_3-c4e44900-0.jpg',
+        price: 1450000,
+        address: '33 Oak Rd, Perth WA'
+      },
+      {
+        img: 'https://cdn.domain.com.au/domain/1301456_4829876_5-05b17e00-0.jpg',
+        price: 1350000,
+        address: '88 River St, Adelaide SA'
+      },
+      {
+        img: 'https://cdn.domain.com.au/domain/1345657_5074903_5-f9d67100-1.jpg',
+        price: 1120000,
+        address: '77 Hill St, Canberra ACT'
+      }
+    ];
+
+    let score = 0;
+    let currentIndexA = null;
+    let currentIndexB = null;
+
+    const img1 = document.getElementById('img-1');
+    const img2 = document.getElementById('img-2');
+    const price1 = document.getElementById('price-1');
+    const price2 = document.getElementById('price-2');
+    const scoreEl = document.getElementById('score');
+    const resultEl = document.getElementById('result');
+    const leaderboardList = document.getElementById('leaderboard-list');
+
+    // Pick two different random properties
+    function pickProperties() {
+      currentIndexA = Math.floor(Math.random() * properties.length);
+      do {
+        currentIndexB = Math.floor(Math.random() * properties.length);
+      } while (currentIndexB === currentIndexA);
+
+      // Show first property fully (image + price)
+      img1.src = properties[currentIndexA].img;
+      price1.textContent = `$${properties[currentIndexA].price.toLocaleString()}`;
+
+      // Show second property image only, hide price
+      img2.src = properties[currentIndexB].img;
+      price2.textContent = '?';
+
+      resultEl.textContent = '';
+    }
+
+    // Check user guess
+    function checkGuess(isHigher) {
+      const priceA = properties[currentIndexA].price;
+      const priceB = properties[currentIndexB].price;
+      const correct = (isHigher && priceB > priceA) || (!isHigher && priceB < priceA);
+
+      // Reveal second property price
+      price2.textContent = `$${priceB.toLocaleString()}`;
+
+      if (correct) {
+        score++;
+        scoreEl.textContent = `Score: ${score}`;
+        resultEl.textContent = 'Correct! 🎉 Next round...';
+        setTimeout(() => {
+          pickProperties();
+        }, 1500);
+      } else {
+        resultEl.textContent = 'Wrong! Game Over. Final score: ' + score;
+        promptNameAndSave();
+      }
+    }
+
+    // Prompt for name and save score to Supabase
+    async function promptNameAndSave() {
+      const name = prompt("Game over! Enter your name for the leaderboard:");
+      if (!name) return;
+
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/leaderboard`, {
+          method: 'POST',
+          headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ name: name.trim(), score: score })
+        });
+        if (!res.ok) throw new Error('Failed to save score');
+        loadLeaderboard();
+        // Reset game
+        score = 0;
+        scoreEl.textContent = `Score: ${score}`;
+        setTimeout(() => {
+          pickProperties();
+          resultEl.textContent = '';
+        }, 2000);
+      } catch (error) {
+        alert('Error saving score: ' + error.message);
+      }
+    }
+
+    // Load leaderboard from Supabase
+    async function loadLeaderboard() {
+      leaderboardList.innerHTML = '<li>Loading leaderboard...</li>';
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/leaderboard?select=name,score&order=score.desc&limit=10`, {
+          headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': `Bearer ${SUPABASE_KEY}`
+          }
+        });
+        if (!res.ok) throw new Error('Failed to load leaderboard');
+        const data = await res.json();
+        if (data.length === 0) {
+          leaderboardList.innerHTML = '<li>No scores yet.</li>';
+          return;
+        }
+        leaderboardList.innerHTML = '';
+        data.forEach(({ name, score }, index) => {
+          const li = document.createElement('li');
+          li.textContent = `${index + 1}. ${name} — ${score}`;
+          leaderboardList.appendChild(li);
+        });
+      } catch (error) {
+        leaderboardList.innerHTML = '<li>Error loading leaderboard</li>';
+        console.error(error);
+      }
+    }
+
+    // Button event listeners
+    document.getElementById('higher-btn').addEventListener('click', () => checkGuess(true));
+    document.getElementById('lower-btn').addEventListener('click', () => checkGuess(false));
+
+    // Start the first round
+    pickProperties();
+    loadLeaderboard();
+
   </script>
 </body>
 </html>
